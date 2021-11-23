@@ -8,6 +8,9 @@ public class Player : MonoBehaviour
     float v;
     bool isHorizonMove;
     public float Speed = 2;
+    public GameManager manager;
+    public GameObject scanObject;
+
     Animator Anim;
     Rigidbody2D rigid;
     [SerializeField]
@@ -20,13 +23,13 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        h = Input.GetAxisRaw("Horizontal");
-        v = Input.GetAxisRaw("Vertical");
+        h = manager.isAction ? 0 : Input.GetAxisRaw("Horizontal");
+        v = manager.isAction ? 0 : Input.GetAxisRaw("Vertical");
 
-        bool hDown = Input.GetButtonDown("Horizontal");
-        bool vDown = Input.GetButtonDown("Vertical");
-        bool hUp = Input.GetButtonUp("Horizontal");
-        bool vUp = Input.GetButtonUp("Vertical");
+        bool hDown = manager.isAction ? false : Input.GetButtonDown("Horizontal");
+        bool vDown = manager.isAction ? false : Input.GetButtonDown("Vertical");
+        bool hUp = manager.isAction ? false : Input.GetButtonUp("Horizontal");
+        bool vUp = manager.isAction ? false : Input.GetButtonUp("Vertical");
 
         if (hDown)
         {
@@ -65,16 +68,25 @@ public class Player : MonoBehaviour
             dirVec = Vector2.right;
         else if (hDown && h == -1)
             dirVec = Vector2.left;
-
-        Debug.DrawRay(transform.position, dirVec, Color.red);
-        RaycastHit2D rayHit = Physics2D.Raycast(transform.position, dirVec, 1.0f, LayerMask.GetMask("Object"));
-        if (rayHit.collider != null)
+        if (Input.GetButtonDown("Jump") && scanObject != null)
         {
-            Debug.Log(rayHit.collider.gameObject.name);
+            manager.Action(scanObject);
         }
     }
     void FixedUpdate()
     {
+        // Ray
+        Debug.DrawRay(transform.position, dirVec, Color.red);
+        RaycastHit2D rayHit = Physics2D.Raycast(transform.position, dirVec, 1.0f, LayerMask.GetMask("Object"));
+        if (rayHit.collider != null)
+        {
+            scanObject = rayHit.collider.gameObject;
+        }
+        else
+        {
+            scanObject = null;
+        }
+        // Move
         Vector2 moveVec = isHorizonMove ? new Vector2(h, 0) : new Vector2(0, v);
         rigid.velocity = moveVec * Speed;
     }
